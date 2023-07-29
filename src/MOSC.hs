@@ -1,17 +1,15 @@
 {-# LANGUAGE NumericUnderscores #-}
 
-module Time where
+module MOSC where
 
 import Control.Concurrent
 import Data.Time
 
-now :: IO String
-now = do
-  t <- Data.Time.getCurrentTime
-  return (show t)
+version :: IO String
+version = show <$> Data.Time.getCurrentTime
 
 foreverNow :: Int -> IO ()
 foreverNow t = do
-  Time.now >>= putStrLn
+  version >>= putStrLn
   threadDelay (t * 1_000_000)
   foreverNow t
