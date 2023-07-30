@@ -20,6 +20,9 @@ printVersion = do
   addr <- resolveTarget
   sock <- newUdpSocket
   forkIO $ requestVersion sock addr
+  -- There's a race condition here - we might end up listening for the response
+  -- after having sent the request (and receiving a response). In practice, I
+  -- haven't seen it happening at all, so letting it be.
   receiveVersion sock >>= putStrLn
 
 receiveVersion :: Udp -> IO String
@@ -60,4 +63,9 @@ targetHost = "127.0.0.1"
 
 -- | The port on the 'targetHost' where we should send OSC messages
 targetPort :: Int
-targetPort = 57110
+targetPort = superColliderServerPort
+
+-- | The UDP port on which SuperCollider's server process (scsynth) listens by
+-- default.
+superColliderServerPort :: Int
+superColliderServerPort = 57110
