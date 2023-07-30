@@ -43,7 +43,7 @@ resolveTarget_ = resolve targetHost targetPort
 
 toE :: Maybe AddrInfo -> IO AddrInfo
 toE mAddr = case mAddr of
-  Nothing -> throw (HostNameResolutionFailed {host = targetHost, port = targetPort})
+  Nothing -> throwIO (HostNameResolutionFailed {host = targetHost, port = targetPort})
   (Just addr) -> return addr
 
 -- | Perform DNS resolution to convert a host:port combination into an
