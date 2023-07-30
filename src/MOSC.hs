@@ -52,7 +52,7 @@ versionMessage = Message "/version" [string ""]
 -- with SuperCollider, it is imperative that we send on the same socket that
 -- we're listening on since SuperCollider sends replies there.
 newUdpSocket :: IO Udp
-newUdpSocket = udpServer "127.0.0.1" 44440 -- 0 allocates a random port?
+newUdpSocket = udpServer "127.0.0.1" 0 -- 0 allocates a random port
 
 -- | The hostname where we should send OSC messages
 targetHost :: String
