@@ -8,7 +8,9 @@ import Data.Time
 import Network.Socket
 import Sound.Osc.Fd
 
-data MOSCException = HostNameResolutionFailed {host :: String, port :: Int}
+data MOSCException
+  = HostNameResolutionFailed {host :: String, port :: Int}
+  | NoResponse
   deriving (Show, Typeable)
 
 instance Exception MOSCException
@@ -21,13 +23,8 @@ printVersion = do
   receiveVersion sock >>= putStrLn
 
 receiveVersion :: Udp -> IO String
-receiveVersion sock = do
-  m <- recvMessage sock
-  return (toString m)
-
-toString :: Maybe Message -> String
-toString (Just ms) = show ms
-toString Nothing = "ERR"
+receiveVersion sock =
+  recvMessage sock >>= maybe (throwIO NoResponse) (pure . show)
 
 requestVersion :: Udp -> AddrInfo -> IO ()
 requestVersion sock addr =
