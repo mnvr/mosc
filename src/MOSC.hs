@@ -42,9 +42,9 @@ resolveTarget = resolveTarget_ >>= toE
 resolveTarget_ = resolve targetHost targetPort
 
 toE :: Maybe AddrInfo -> IO AddrInfo
-toE mAddr = case mAddr of
-  Nothing -> throwIO (HostNameResolutionFailed {host = targetHost, port = targetPort})
-  (Just addr) -> return addr
+toE = maybe (throwIO ex) pure
+ where
+  ex = (HostNameResolutionFailed {host = targetHost, port = targetPort})
 
 -- | Perform DNS resolution to convert a host:port combination into an
 -- 'AddrInfo'
