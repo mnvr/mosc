@@ -37,14 +37,10 @@ requestVersion = putStrLn "test"
 
 -- | Return an 'AddrInfo' representing 'targetHost':'targetPort'
 resolveTarget :: IO AddrInfo
-resolveTarget = resolveTarget_ >>= toE
-
-resolveTarget_ = resolve targetHost targetPort
-
-toE :: Maybe AddrInfo -> IO AddrInfo
-toE = maybe (throwIO ex) pure
- where
-  ex = (HostNameResolutionFailed {host = targetHost, port = targetPort})
+resolveTarget = resolve targetHost targetPort >>= toE
+  where
+    toE = maybe (throwIO ex) pure
+    ex = (HostNameResolutionFailed {host = targetHost, port = targetPort})
 
 -- | Perform DNS resolution to convert a host:port combination into an
 -- 'AddrInfo'
