@@ -5,8 +5,8 @@ import Control.Exception
 import Data.Data
 import Data.Maybe
 import Data.Time
-import Network.Socket
-import Sound.Osc.Fd
+import qualified Network.Socket as N
+import qualified Sound.Osc.Fd as O
 
 data MOSCException = HostNameResolutionFailed {host :: String, port :: Int}
   deriving (Show, Typeable)
@@ -16,24 +16,25 @@ instance Exception MOSCException
 printVersion :: IO ()
 printVersion = do
   addr <- resolveTarget
-  sock <- targetListener
+  sock <- udpSocket
   forkIO $ requestVersion sock addr
   receiveVersion sock >>= putStrLn
 
-receiveVersion :: Udp -> IO String
+receiveVersion :: O.Udp -> IO String
 receiveVersion sock = do
-  m <- recvMessage sock
+  m <- O.recvMessage sock
   return (toString m)
 
-toString :: Maybe Message -> String
+toString :: Maybe O.Message -> String
 toString (Just ms) = show ms
 toString Nothing = "ERR"
 
-requestVersion :: Udp -> AddrInfo -> IO ()
-requestVersion sock addr = sendTo sock (Packet_Message versionMessage) (addrAddress addr)
+requestVersion :: O.Udp -> N.AddrInfo -> IO ()
+requestVersion sock addr =
+  O.sendTo sock (O.Packet_Message versionMessage) (N.addrAddress addr)
 
 -- | Return an 'AddrInfo' representing 'targetHost':'targetPort'
-resolveTarget :: IO AddrInfo
+resolveTarget :: IO N.AddrInfo
 resolveTarget = resolve targetHost targetPort >>= toE
   where
     toE = maybe (throwIO ex) pure
@@ -41,26 +42,21 @@ resolveTarget = resolve targetHost targetPort >>= toE
 
 -- | Perform DNS resolution to convert a host:port combination into an
 -- 'AddrInfo'
-resolve :: String -> Int -> IO (Maybe AddrInfo)
+resolve :: String -> Int -> IO (Maybe N.AddrInfo)
 resolve host port =
-  listToMaybe <$> getAddrInfo (Just defaultHints) (Just host) (Just (show port))
+  listToMaybe
+    <$> N.getAddrInfo (Just N.defaultHints) (Just host) (Just (show port))
 
-versionMessage :: Message
-versionMessage = Message "/version" [string ""]
+versionMessage :: O.Message
+versionMessage = O.Message "/version" [O.string ""]
 
-udpOut :: IO Udp
-udpOut = openUdp "127.0.0.1" 57110
-
-udpIn :: IO Udp
-udpIn = openUdp "127.0.0.1" 44440 -- 0 allocates a random port?
-
--- | A UDP socket listening on targetHost:targetPort
+-- | A UDP socket listening on localhost, at an arbitrary port
 --
 -- We can both send and receive using the same UDP socket. When communicating
 -- with SuperCollider, it is imperative that we send on the same socket that
 -- we're listening on since SuperCollider sends replies there.
-targetListener :: IO Udp
-targetListener = udpServer targetHost targetPort
+udpSocket :: IO O.Udp
+udpSocket = O.udpServer "127.0.0.1" 44440 -- 0 allocates a random port?
 
 -- | The hostname where we should send OSC messages
 targetHost :: String
